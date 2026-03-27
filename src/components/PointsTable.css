@@ -1,0 +1,166 @@
+.points-table {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px 40px 40px 50px 60px 80px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
+}
+
+.table-body {
+  background: white;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px 40px 40px 50px 60px 80px;
+  padding: 1rem 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: center;
+  align-items: center;
+}
+
+.table-row:hover {
+  background: rgba(102, 126, 234, 0.05);
+  transform: translateX(4px);
+}
+
+.table-row.playoff {
+  border-left: 4px solid #4CAF50;
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.table-row.fifth {
+  border-left: 4px solid #FF9800;
+  background: rgba(255, 152, 0, 0.05);
+}
+
+.table-row.eliminated {
+  border-left: 4px solid #f44336;
+  background: rgba(244, 67, 54, 0.05);
+}
+
+.pos-col {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.team-col {
+  text-align: left;
+  padding-left: 0.5rem;
+}
+
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.team-short {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.team-full {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.matches-col,
+.won-col,
+.lost-col,
+.points-col {
+  font-weight: 600;
+}
+
+.points-col {
+  font-size: 1.1rem;
+  color: #667eea;
+}
+
+.nrr-col {
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+}
+
+.status-col {
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.playoff {
+  background: #4CAF50;
+  color: white;
+}
+
+.status-badge.fifth {
+  background: #FF9800;
+  color: white;
+}
+
+.status-badge.eliminated {
+  background: #f44336;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 30px 1fr 30px 30px 30px 40px 50px 70px;
+    padding: 0.75rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .team-short {
+    font-size: 0.8rem;
+  }
+  
+  .team-full {
+    font-size: 0.7rem;
+  }
+  
+  .status-badge {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 25px 1fr 25px 25px 25px 35px 45px 60px;
+    padding: 0.5rem 0.2rem;
+    font-size: 0.75rem;
+  }
+  
+  .team-full {
+    display: none;
+  }
+  
+  .status-badge {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.3rem;
+  }
+}
