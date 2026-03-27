@@ -4,37 +4,28 @@ const DATA_TAG = 'cricket-data';
 
 const USE_LOCAL_DATA = process.env.REACT_APP_LOCAL_DATA === 'true';
 
+const DOWNLOAD_BASE = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/download/${DATA_TAG}`;
+const CORS_PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class DataLoader {
   static async fetchReleaseAsset(filename) {
-    const cacheBust = `_cb=${Date.now()}`;
-    const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tags/${DATA_TAG}?${cacheBust}`;
-
-    const response = await fetch(url, { cache: 'no-store' });
+    const url = `${CORS_PROXY}${DOWNLOAD_BASE}/${filename}`;
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch release info: ${response.status}`);
+      throw new Error(`Failed to download ${filename}: ${response.status}`);
     }
-
-    const release = await response.json();
-    const asset = release.assets.find(a => a.name === filename);
-    if (!asset) {
-      throw new Error(`Asset "${filename}" not found in release`);
-    }
-
-    const assetUrl = `${asset.browser_download_url}?${cacheBust}`;
-    const assetResponse = await fetch(assetUrl, { cache: 'no-store' });
-    if (!assetResponse.ok) {
-      throw new Error(`Failed to download asset: ${assetResponse.status}`);
-    }
-
-    return assetResponse.json();
+    return response.json();
   }
 
   static async fetchLocalFile(filename) {
     const response = await fetch(`${process.env.PUBLIC_URL}/data/${filename}`, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(
-        `Local file "public/data/${filename}" not found. ` +
-        `Fetch it first — see README for instructions.`
+        `Local file "public/data/${filename}" not found. Fetch it first — see README.`
       );
     }
     return response.json();
@@ -48,6 +39,13 @@ class DataLoader {
   static async loadSchedule() {
     if (USE_LOCAL_DATA) return this.fetchLocalFile('schedule.json');
     return this.fetchReleaseAsset('schedule.json');
+  }
+
+  static async loadAll() {
+    const pointsTable = await DataLoader.loadPointsTable();
+    await delay(1000);
+    const schedule = await DataLoader.loadSchedule();
+    return { pointsTable, schedule };
   }
 }
 

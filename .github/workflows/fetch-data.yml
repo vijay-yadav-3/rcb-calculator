@@ -21,25 +21,21 @@ jobs:
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
-          # Fetch points table
           curl -s -X GET \
             "https://cricbuzz-cricket.p.rapidapi.com/stats/v1/series/9241/points-table" \
             -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
             -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
             -o pointsTable.json
 
-          # Fetch schedule
           curl -s -X GET \
             "https://cricbuzz-cricket.p.rapidapi.com/series/v1/9241" \
             -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
             -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
             -o schedule.json
 
-          # Validate JSON files are not empty / error responses
           echo "Points table size: $(wc -c < pointsTable.json) bytes"
           echo "Schedule size: $(wc -c < schedule.json) bytes"
 
-          # Quick sanity check - ensure they're valid JSON
           python3 -c "import json; json.load(open('pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
           python3 -c "import json; json.load(open('schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
 

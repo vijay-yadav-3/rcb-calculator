@@ -34,10 +34,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const [ptData, schData] = await Promise.all([
-        DataLoader.loadPointsTable(),
-        DataLoader.loadSchedule(),
-      ]);
+      const { pointsTable: ptData, schedule: schData } = await DataLoader.loadAll();
       setPointsTable(ptData.pointsTable[0].pointsTableInfo);
       setSchedule(extractMatches(schData));
     } catch (err) {
