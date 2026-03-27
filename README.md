@@ -2,7 +2,7 @@
 
 Pick winners for upcoming matches and watch the points table update in real-time.
 
-**Live site:** `https://vijay-yadav-3.github.io/rcb-calculator`
+**Live site:** [https://vijay-yadav-3.github.io/rcb-calculator](https://vijay-yadav-3.github.io/rcb-calculator)
 
 ---
 
@@ -19,7 +19,7 @@ npm start
 
 ### Option 2: Fetch data yourself with your own API key
 
-1. Get a free API key from [RapidAPI - Cricbuzz Cricket](https://rapidapi.com/cricbuzz-cricket/api/cricbuzz-cricket)
+1. Get a free API key from [RapidAPI - Cricbuzz Cricket](https://rapidapi.com/apiservicesprovider/api/cricbuzz-cricket2)
 
 2. Fetch the data:
 ```bash

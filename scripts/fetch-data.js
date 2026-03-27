@@ -24,11 +24,11 @@ const endpoints = {
 function fetchAndSave(filename, apiPath) {
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'cricbuzz-cricket.p.rapidapi.com',
+      hostname: 'cricbuzz-cricket2.p.rapidapi.com',
       path: apiPath,
       headers: {
         'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': 'cricbuzz-cricket.p.rapidapi.com',
+        'X-RapidAPI-Host': 'cricbuzz-cricket2.p.rapidapi.com',
       },
     };
 
