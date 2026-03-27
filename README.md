@@ -2,7 +2,7 @@
 
 Pick winners for upcoming matches and watch the points table update in real-time.
 
-**Live site:** `https://<your-github-username>.github.io/rcb-calculator`
+**Live site:** `https://vijay-yadav-3.github.io/rcb-calculator`
 
 ---
 
