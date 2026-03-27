@@ -1,4 +1,4 @@
-const GITHUB_OWNER = '<your-github-username>';
+const GITHUB_OWNER = 'vijay-yadav-3';
 const GITHUB_REPO = 'rcb-calculator';
 const DATA_TAG = 'cricket-data';
 
