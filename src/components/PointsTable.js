@@ -4,14 +4,12 @@ import './PointsTable.css';
 const PointsTable = ({ teams }) => {
   const getPlayoffPosition = (index) => {
     if (index < 4) return 'playoff';
-    if (index === 4) return 'fifth';
     return 'eliminated';
   };
 
   const getPositionText = (index) => {
-    if (index < 4) return 'Playoffs';
-    if (index === 4) return '5th Place';
-    return 'Eliminated';
+    if (index < 4) return 'Q';
+    return 'E';
   };
 
   return (

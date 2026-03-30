@@ -38,8 +38,9 @@ const MatchSchedule = ({ matches, predictions, onPrediction }) => {
       flexDirection: 'column',
       gap: '8px',
       padding: '5px',
-      maxHeight: '600px',
-      overflowY: 'auto'
+      maxHeight: '660px',
+      overflowY: 'auto',
+      overscrollBehavior: 'contain'
     },
     card: {
       background: 'white',

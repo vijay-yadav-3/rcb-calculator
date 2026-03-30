@@ -107,7 +107,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  height: 100%;
+  align-items: stretch;
 }
 
 .points-section,
@@ -118,6 +118,11 @@ body {
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.schedule-section {
+  display: flex;
+  flex-direction: column;
 }
 
 .points-section h2,

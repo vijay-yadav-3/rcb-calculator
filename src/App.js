@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import PointsTable from './components/PointsTable';
 import MatchSchedule from './components/MatchSchedule';
@@ -51,8 +51,8 @@ function App() {
     }));
   };
 
-  const calculateUpdatedTable = () => {
-    const updatedTable = pointsTable.map(team => ({
+  const updatedTable = useMemo(() => {
+    const table = pointsTable.map(team => ({
       ...team,
       matchesPlayed: team.matchesPlayed || 0,
       matchesWon: team.matchesWon || 0,
@@ -69,41 +69,41 @@ function App() {
         const team2Id = match.matchInfo.team2?.teamId;
         if (!team1Id || !team2Id) return;
 
-        const team1Index = updatedTable.findIndex(team => team.teamId === team1Id);
-        const team2Index = updatedTable.findIndex(team => team.teamId === team2Id);
+        const team1Index = table.findIndex(team => team.teamId === team1Id);
+        const team2Index = table.findIndex(team => team.teamId === team2Id);
 
         if (team1Index !== -1 && team2Index !== -1) {
           if (prediction === team1Id) {
-            updatedTable[team1Index] = {
-              ...updatedTable[team1Index],
-              matchesPlayed: updatedTable[team1Index].matchesPlayed + 1,
-              matchesWon: updatedTable[team1Index].matchesWon + 1,
-              points: updatedTable[team1Index].points + 2
+            table[team1Index] = {
+              ...table[team1Index],
+              matchesPlayed: table[team1Index].matchesPlayed + 1,
+              matchesWon: table[team1Index].matchesWon + 1,
+              points: table[team1Index].points + 2
             };
-            updatedTable[team2Index] = {
-              ...updatedTable[team2Index],
-              matchesPlayed: updatedTable[team2Index].matchesPlayed + 1,
-              matchesLost: updatedTable[team2Index].matchesLost + 1
+            table[team2Index] = {
+              ...table[team2Index],
+              matchesPlayed: table[team2Index].matchesPlayed + 1,
+              matchesLost: table[team2Index].matchesLost + 1
             };
           } else if (prediction === team2Id) {
-            updatedTable[team2Index] = {
-              ...updatedTable[team2Index],
-              matchesPlayed: updatedTable[team2Index].matchesPlayed + 1,
-              matchesWon: updatedTable[team2Index].matchesWon + 1,
-              points: updatedTable[team2Index].points + 2
+            table[team2Index] = {
+              ...table[team2Index],
+              matchesPlayed: table[team2Index].matchesPlayed + 1,
+              matchesWon: table[team2Index].matchesWon + 1,
+              points: table[team2Index].points + 2
             };
-            updatedTable[team1Index] = {
-              ...updatedTable[team1Index],
-              matchesPlayed: updatedTable[team1Index].matchesPlayed + 1,
-              matchesLost: updatedTable[team1Index].matchesLost + 1
+            table[team1Index] = {
+              ...table[team1Index],
+              matchesPlayed: table[team1Index].matchesPlayed + 1,
+              matchesLost: table[team1Index].matchesLost + 1
             };
           }
         }
       }
     });
 
-    return updatedTable.sort((a, b) => (b.points - a.points) || (parseFloat(b.nrr) - parseFloat(a.nrr)));
-  };
+    return table.sort((a, b) => (b.points - a.points) || (parseFloat(b.nrr) - parseFloat(a.nrr)));
+  }, [pointsTable, schedule, predictions]);
 
   return (
     <div className="App">
@@ -146,7 +146,7 @@ function App() {
         <div className="content-grid">
           <section className="points-section">
             <h2>Current Points Table</h2>
-            <PointsTable teams={calculateUpdatedTable()} />
+            <PointsTable teams={updatedTable} />
           </section>
 
           <section className="schedule-section">
