@@ -2,19 +2,10 @@ name: Fetch Cricket Data
 
 on:
   schedule:
-    # Runs 6:00 PM - 6:25 PM & 10:00 PM - 10:25 PM (IST)
-    # (12:30 - 12:55 & 16:30 - 16:55 UTC)
-    - cron: '30-59/5 12,16 * * *'
-
-    # Runs 6:30 PM - 7:25 PM & 10:30 PM - 11:25 PM (IST)
-    # (13:00 - 13:55 & 17:00 - 17:55 UTC)
-    - cron: '*/5 13,17 * * *'
-
-    # Runs 7:30 PM - 8:00 PM & 11:30 PM - 12:00 AM (IST)
-    # (14:00 - 14:30 & 18:00 - 18:30 UTC)
-    - cron: '0-30/5 14,18 * * *'
-    
-  # Allow manual trigger
+    # 6-8 PM IST (12:30-14:30 UTC) — cover 12-15 UTC to account for half-hour offset
+    - cron: '*/5 12-14 * * *'
+    # 10 PM - 12 AM IST (16:30-18:30 UTC) — cover 16-19 UTC
+    - cron: '*/5 16-18 * * *'
   workflow_dispatch:
 
 jobs:
@@ -32,15 +23,15 @@ jobs:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
           curl -s -X GET \
-            "https://cricbuzz-cricket2.p.rapidapi.com/stats/v1/series/9241/points-table" \
+            "https://cricbuzz-cricket.p.rapidapi.com/stats/v1/series/9241/points-table" \
             -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
-            -H "X-RapidAPI-Host: cricbuzz-cricket2.p.rapidapi.com" \
+            -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
             -o pointsTable.json
 
           curl -s -X GET \
-            "https://cricbuzz-cricket2.p.rapidapi.com/series/v1/9241" \
+            "https://cricbuzz-cricket.p.rapidapi.com/series/v1/9241" \
             -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
-            -H "X-RapidAPI-Host: cricbuzz-cricket2.p.rapidapi.com" \
+            -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
             -o schedule.json
 
           echo "Points table size: $(wc -c < pointsTable.json) bytes"

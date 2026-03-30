@@ -11,15 +11,15 @@ const MatchSchedule = ({ matches, predictions, onPrediction }) => {
     });
   };
 
-  const isUpcoming = (state) => {
-    return state === 'Upcoming' || state === 'Preview';
+  const isNotComplete = (state) => {
+    return state !== 'Complete';
   };
 
   const upcomingMatches = matches.filter(match => 
-    match.matchInfo && isUpcoming(match.matchInfo.state)
+    match.matchInfo && isNotComplete(match.matchInfo.state)
   );
 
-  const matchesToShow = upcomingMatches.length > 0 ? upcomingMatches : matches.slice(15, 25);
+  const matchesToShow = upcomingMatches.length > 0 ? upcomingMatches : matches;
 
   // Handle click - toggle selection (click again to deselect)
   const handleTeamClick = (matchId, teamId, currentPrediction) => {

@@ -64,7 +64,7 @@ function App() {
     schedule.forEach(match => {
       if (!match.matchInfo) return;
       const prediction = predictions[match.matchInfo.matchId];
-      if (prediction && (match.matchInfo.state === 'Upcoming' || match.matchInfo.state === 'Preview')) {
+      if (prediction && match.matchInfo.state !== 'Complete') {
         const team1Id = match.matchInfo.team1?.teamId;
         const team2Id = match.matchInfo.team2?.teamId;
         if (!team1Id || !team2Id) return;
