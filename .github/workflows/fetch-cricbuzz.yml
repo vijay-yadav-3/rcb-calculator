@@ -1,0 +1,49 @@
+name: Fetch Cricket Data (Cricbuzz Scraper)
+
+on:
+  schedule:
+    # 6-8 PM IST (12:30-14:30 UTC) — cover 12-15 UTC to account for half-hour offset
+    - cron: '*/5 12-14 * * *'
+    # 10 PM - 12 AM IST (16:30-18:30 UTC) — cover 16-19 UTC
+    - cron: '*/5 16-18 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Fetch data from Cricbuzz
+        run: node scripts/fetch-cricbuzz.js
+
+      - name: Validate JSON files
+        run: |
+          python3 -c "import json; json.load(open('public/data/pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
+          python3 -c "import json; json.load(open('public/data/schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
+
+      - name: Delete existing release (if any)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete cricket-data --yes --cleanup-tag 2>/dev/null || true
+
+      - name: Create release with data assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create cricket-data \
+            public/data/pointsTable.json \
+            public/data/schedule.json \
+            --title "Cricket Data (auto-updated)" \
+            --notes "Auto-updated on $(date -u '+%Y-%m-%d %H:%M UTC')" \
+            --latest=false

@@ -19,3 +19,4 @@ npm-debug.log*
 
 # Locally fetched API data
 /public/data/
+/tmp
