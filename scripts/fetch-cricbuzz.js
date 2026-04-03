@@ -7,18 +7,25 @@
  *
  * No API key needed.
  *
- * Usage: node scripts/fetch-cricbuzz.js
- * Output: public/data/pointsTable.json, public/data/schedule.json
+ * Usage:
+ *   Local:   node scripts/fetch-cricbuzz.js
+ *   Actions: node scripts/fetch-cricbuzz.js --actions
+ *
+ * Output:
+ *   Local:   public/data/pointsTable.json, public/data/schedule.json
+ *   Actions: pointsTable.json, schedule.json (in working directory)
  */
 
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+const isActions = process.argv.includes('--actions');
 const SERIES_ID = 9241;
 const SERIES_SLUG = 'indian-premier-league-2026';
 const BASE = 'https://www.cricbuzz.com';
-const outDir = path.join(__dirname, '..', 'public', 'data');
+const outDir = isActions ? process.cwd() : path.join(__dirname, '..', 'public', 'data');
+fs.mkdirSync(outDir, { recursive: true });
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
@@ -225,7 +232,7 @@ function parseSchedule(html) {
     console.log(`  Found ${teamCount} teams`);
 
     fs.writeFileSync(path.join(outDir, 'pointsTable.json'), JSON.stringify(pointsTable, null, 2));
-    console.log('  Saved public/data/pointsTable.json\n');
+    console.log(`  Saved ${path.join(outDir, 'pointsTable.json')}\n`);
 
     // 2. Schedule
     console.log('Fetching schedule...');
@@ -235,7 +242,7 @@ function parseSchedule(html) {
     console.log(`  Found ${matchCount} matches across ${schedule.matchDetails.length} date groups`);
 
     fs.writeFileSync(path.join(outDir, 'schedule.json'), JSON.stringify(schedule, null, 2));
-    console.log('  Saved public/data/schedule.json\n');
+    console.log(`  Saved ${path.join(outDir, 'schedule.json')}\n`);
 
     console.log('Done!');
   } catch (e) {

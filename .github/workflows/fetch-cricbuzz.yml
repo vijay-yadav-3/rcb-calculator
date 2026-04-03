@@ -24,12 +24,12 @@ jobs:
           node-version: '24'
 
       - name: Fetch data from Cricbuzz
-        run: node scripts/fetch-cricbuzz.js
+        run: node scripts/fetch-cricbuzz.js --actions
 
       - name: Validate JSON files
         run: |
-          python3 -c "import json; json.load(open('public/data/pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
-          python3 -c "import json; json.load(open('public/data/schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
+          python3 -c "import json; json.load(open('pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
+          python3 -c "import json; json.load(open('schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
 
       - name: Delete existing release (if any)
         env:
@@ -42,8 +42,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create cricket-data \
-            public/data/pointsTable.json \
-            public/data/schedule.json \
+            pointsTable.json \
+            schedule.json \
             --title "Cricket Data (auto-updated)" \
             --notes "Auto-updated on $(date -u '+%Y-%m-%d %H:%M UTC')" \
             --latest=false
