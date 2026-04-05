@@ -1,0 +1,57 @@
+name: Fetch Cricket Data
+
+on:
+  # schedule disabled — replaced by fetch-cricbuzz.yml
+  # schedule:
+  #   - cron: '*/5 12-14 * * *'
+  #   - cron: '*/5 16-18 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch data from Cricbuzz API
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+        run: |
+          curl -s -X GET \
+            "https://cricbuzz-cricket.p.rapidapi.com/stats/v1/series/9241/points-table" \
+            -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
+            -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
+            -o pointsTable.json
+
+          curl -s -X GET \
+            "https://cricbuzz-cricket.p.rapidapi.com/series/v1/9241" \
+            -H "X-RapidAPI-Key: ${RAPIDAPI_KEY}" \
+            -H "X-RapidAPI-Host: cricbuzz-cricket.p.rapidapi.com" \
+            -o schedule.json
+
+          echo "Points table size: $(wc -c < pointsTable.json) bytes"
+          echo "Schedule size: $(wc -c < schedule.json) bytes"
+
+          python3 -c "import json; json.load(open('pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
+          python3 -c "import json; json.load(open('schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
+
+      - name: Delete existing release (if any)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete cricket-data --yes --cleanup-tag 2>/dev/null || true
+
+      - name: Create release with data assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create cricket-data \
+            pointsTable.json \
+            schedule.json \
+            --title "Cricket Data (auto-updated)" \
+            --notes "Auto-updated on $(date -u '+%Y-%m-%d %H:%M UTC')" \
+            --latest=false
