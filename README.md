@@ -6,18 +6,35 @@ Pick winners for upcoming matches and watch the points table update in real-time
 
 ---
 
+## How It Works
+
+Cricket data (points table + schedule) is scraped from Cricbuzz and committed to `public/data/` by a GitHub Actions workflow. The app loads these JSON files directly — no proxy, no external API at runtime.
+
+The workflow runs on a cron schedule during IPL match hours and can also be triggered manually or via an external cron service (e.g. [cron-job.org](https://cron-job.org)) for more reliable timing.
+
+---
+
 ## Running Locally
 
-### Option 1: Use data from GitHub Releases (default)
+1. Fetch the latest data from Cricbuzz:
+```bash
+node scripts/fetch-cricbuzz.js
+```
+This saves `pointsTable.json` and `schedule.json` into `public/data/`.
 
-Data is fetched from the repo's GitHub Release on every page load.
-
+2. Start the app:
 ```bash
 npm install
 npm start
 ```
 
-### Option 2: Fetch data yourself with your own API key
+That's it. The app reads from `public/data/` automatically.
+
+---
+
+## Deprecated: RapidAPI (fetch-data.js)
+
+The original data fetching used the Cricbuzz API via RapidAPI. This still works but requires an API key.
 
 1. Get a free API key from [RapidAPI - Cricbuzz Cricket](https://rapidapi.com/apiservicesprovider/api/cricbuzz-cricket2)
 
@@ -25,21 +42,9 @@ npm start
 ```bash
 node scripts/fetch-data.js YOUR_RAPIDAPI_KEY
 ```
-This saves `pointsTable.json` and `schedule.json` into `public/data/`.
 
-3. Start with local data mode:
-
-   PowerShell:
-   ```powershell
-   $env:REACT_APP_LOCAL_DATA="true"; npm start
-   ```
-   CMD:
-   ```cmd
-   set REACT_APP_LOCAL_DATA=true && npm start
-   ```
-   Mac/Linux:
-   ```bash
-   REACT_APP_LOCAL_DATA=true npm start
-   ```
-
-The app reads from `public/data/` instead of GitHub Releases when this flag is set.
+3. Start the app:
+```bash
+npm install
+npm start
+```

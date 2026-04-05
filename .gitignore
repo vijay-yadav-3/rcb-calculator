@@ -17,6 +17,5 @@
 
 npm-debug.log*
 
-# Locally fetched API data
-/public/data/
+# Locally fetched API data (deprecated)
 /tmp

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch-and-release:
+  fetch-and-commit:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,26 +24,35 @@ jobs:
           node-version: '24'
 
       - name: Fetch data from Cricbuzz
-        run: node scripts/fetch-cricbuzz.js --actions
+        run: node scripts/fetch-cricbuzz.js
 
       - name: Validate JSON files
         run: |
-          python3 -c "import json; json.load(open('pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
-          python3 -c "import json; json.load(open('schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
+          python3 -c "import json; json.load(open('public/data/pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
+          python3 -c "import json; json.load(open('public/data/schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
 
-      - name: Delete existing release (if any)
+      - name: Commit and force push updated data
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/pointsTable.json public/data/schedule.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            # Check if the last commit is a data update — amend it instead of creating a new one
+            if git log -1 --pretty=%s | grep -q "^chore: update cricket data$"; then
+              git commit --amend --no-edit
+            else
+              git commit -m "chore: update cricket data"
+            fi
+            git push --force-with-lease
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger deploy workflow
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release delete cricket-data --yes --cleanup-tag 2>/dev/null || true
-
-      - name: Create release with data assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create cricket-data \
-            pointsTable.json \
-            schedule.json \
-            --title "Cricket Data (auto-updated)" \
-            --notes "Auto-updated on $(date -u '+%Y-%m-%d %H:%M UTC')" \
-            --latest=false
+        run: gh workflow run deploy.yml

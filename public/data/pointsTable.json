@@ -1,0 +1,105 @@
+{
+  "pointsTable": [
+    {
+      "groupName": "Teams",
+      "pointsTableInfo": [
+        {
+          "teamId": 64,
+          "teamName": "RR",
+          "teamFullName": "Rajasthan Royals",
+          "matchesPlayed": 2,
+          "matchesWon": 2,
+          "points": 4,
+          "nrr": "+2.233"
+        },
+        {
+          "teamId": 61,
+          "teamName": "DC",
+          "teamFullName": "Delhi Capitals",
+          "matchesPlayed": 2,
+          "matchesWon": 2,
+          "points": 4,
+          "nrr": "+1.170"
+        },
+        {
+          "teamId": 65,
+          "teamName": "PBKS",
+          "teamFullName": "Punjab Kings",
+          "matchesPlayed": 2,
+          "matchesWon": 2,
+          "points": 4,
+          "nrr": "+0.637"
+        },
+        {
+          "teamId": 59,
+          "teamName": "RCB",
+          "teamFullName": "Royal Challengers Bengaluru",
+          "matchesPlayed": 1,
+          "matchesWon": 1,
+          "points": 2,
+          "nrr": "+2.907"
+        },
+        {
+          "teamId": 255,
+          "teamName": "SRH",
+          "teamFullName": "Sunrisers Hyderabad",
+          "matchesPlayed": 2,
+          "matchesWon": 1,
+          "points": 2,
+          "nrr": "+0.469",
+          "matchesLost": 1
+        },
+        {
+          "teamId": 62,
+          "teamName": "MI",
+          "teamFullName": "Mumbai Indians",
+          "matchesPlayed": 2,
+          "matchesWon": 1,
+          "points": 2,
+          "nrr": "-0.206",
+          "matchesLost": 1
+        },
+        {
+          "teamId": 971,
+          "teamName": "GT",
+          "teamFullName": "Gujarat Titans",
+          "matchesPlayed": 2,
+          "matchesWon": 0,
+          "points": 0,
+          "nrr": "-0.424",
+          "matchesLost": 2
+        },
+        {
+          "teamId": 966,
+          "teamName": "LSG",
+          "teamFullName": "Lucknow Super Giants",
+          "matchesPlayed": 1,
+          "matchesWon": 0,
+          "points": 0,
+          "nrr": "-1.397",
+          "matchesLost": 1
+        },
+        {
+          "teamId": 63,
+          "teamName": "KKR",
+          "teamFullName": "Kolkata Knight Riders",
+          "matchesPlayed": 2,
+          "matchesWon": 0,
+          "points": 0,
+          "nrr": "-1.964",
+          "matchesLost": 2
+        },
+        {
+          "teamId": 58,
+          "teamName": "CSK",
+          "teamFullName": "Chennai Super Kings",
+          "matchesPlayed": 2,
+          "matchesWon": 0,
+          "points": 0,
+          "nrr": "-2.562",
+          "matchesLost": 2
+        }
+      ]
+    }
+  ]
+}

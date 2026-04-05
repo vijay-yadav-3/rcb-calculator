@@ -7,24 +7,18 @@
  *
  * No API key needed.
  *
- * Usage:
- *   Local:   node scripts/fetch-cricbuzz.js
- *   Actions: node scripts/fetch-cricbuzz.js --actions
- *
- * Output:
- *   Local:   public/data/pointsTable.json, public/data/schedule.json
- *   Actions: pointsTable.json, schedule.json (in working directory)
+ * Usage:   node scripts/fetch-cricbuzz.js
+ * Output:  public/data/pointsTable.json, public/data/schedule.json
  */
 
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const isActions = process.argv.includes('--actions');
 const SERIES_ID = 9241;
 const SERIES_SLUG = 'indian-premier-league-2026';
 const BASE = 'https://www.cricbuzz.com';
-const outDir = isActions ? process.cwd() : path.join(__dirname, '..', 'public', 'data');
+const outDir = path.join(__dirname, '..', 'public', 'data');
 fs.mkdirSync(outDir, { recursive: true });
 
 const HEADERS = {
