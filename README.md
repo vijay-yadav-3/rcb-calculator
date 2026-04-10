@@ -4,6 +4,8 @@ Pick winners for upcoming matches and watch the points table update in real-time
 
 **Live site:** [https://vijay-yadav-3.github.io/rcb-calculator](https://vijay-yadav-3.github.io/rcb-calculator)
 
+📊 **Visitor Stats:** [https://rcb-calculator.goatcounter.com](https://rcb-calculator.goatcounter.com)
+
 ---
 
 ## How It Works
