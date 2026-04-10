@@ -29,21 +29,50 @@ jobs:
           python3 -c "import json; json.load(open('public/data/pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
           python3 -c "import json; json.load(open('public/data/schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
 
-      - name: Update GitHub Gist
+      - name: Update GitHub Gist (only on change, rolling 10 revisions)
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: 718302e78dbf7dbe320ba2b0d39eaf6a
         run: |
+          # Compute revision hash from current data
+          CURRENT_HASH=$(cat public/data/pointsTable.json public/data/schedule.json | sha256sum | awk '{print $1}')
+          echo "Current data hash: $CURRENT_HASH"
+
+          # Fetch existing revisions.json from gist
+          GIST_RESPONSE=$(curl -s -H "Authorization: token $GIST_TOKEN" https://api.github.com/gists/$GIST_ID)
+          EXISTING_REVISIONS=$(echo "$GIST_RESPONSE" | jq -r '.files["revisions.json"].content // "[]"')
+
+          # Check if latest revision matches current hash
+          LATEST_HASH=$(echo "$EXISTING_REVISIONS" | jq -r '.[0].hash // ""')
+
+          if [ "$CURRENT_HASH" = "$LATEST_HASH" ]; then
+            echo "No change in data (hash: $CURRENT_HASH). Skipping gist update."
+            exit 0
+          fi
+
+          echo "Data changed. Updating gist..."
+
+          # Build new revision entry
+          NEW_ENTRY=$(jq -n --arg hash "$CURRENT_HASH" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{ "hash": $hash, "timestamp": $ts }')
+
+          # Prepend new entry and keep only latest 10
+          UPDATED_REVISIONS=$(echo "$EXISTING_REVISIONS" | jq --argjson entry "$NEW_ENTRY" '[$entry] + . | .[0:10]')
+
+          # Build gist payload
           POINTS=$(jq -Rs '.' public/data/pointsTable.json)
           SCHEDULE=$(jq -Rs '.' public/data/schedule.json)
+          REVISIONS=$(echo "$UPDATED_REVISIONS" | jq -Rs '.')
 
           jq -n \
             --argjson points "$POINTS" \
             --argjson schedule "$SCHEDULE" \
-            '{ "files": { "pointsTable.json": { "content": $points }, "schedule.json": { "content": $schedule } } }' \
+            --argjson revisions "$REVISIONS" \
+            '{ "files": { "pointsTable.json": { "content": $points }, "schedule.json": { "content": $schedule }, "revisions.json": { "content": $revisions } } }' \
           | curl -s -X PATCH \
               -H "Authorization: token $GIST_TOKEN" \
               -H "Content-Type: application/json" \
               -d @- \
-              https://api.github.com/gists/718302e78dbf7dbe320ba2b0d39eaf6a > /dev/null
+              https://api.github.com/gists/$GIST_ID > /dev/null
 
-          echo "Gist updated successfully"
+          echo "Gist updated with new revision ($CURRENT_HASH)"
