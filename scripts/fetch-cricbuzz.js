@@ -18,6 +18,7 @@ const path = require('path');
 const SERIES_ID = 9241;
 const SERIES_SLUG = 'indian-premier-league-2026';
 const BASE = 'https://www.cricbuzz.com';
+
 const outDir = path.join(__dirname, '..', 'public', 'data');
 fs.mkdirSync(outDir, { recursive: true });
 

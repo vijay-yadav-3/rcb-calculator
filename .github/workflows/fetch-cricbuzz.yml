@@ -9,10 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch-and-commit:
+  fetch-and-update-gist:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repo
@@ -31,28 +29,21 @@ jobs:
           python3 -c "import json; json.load(open('public/data/pointsTable.json'))" || { echo "Invalid pointsTable.json"; exit 1; }
           python3 -c "import json; json.load(open('public/data/schedule.json'))" || { echo "Invalid schedule.json"; exit 1; }
 
-      - name: Commit and force push updated data
-        id: commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/pointsTable.json public/data/schedule.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            # Check if the last commit is a data update — amend it instead of creating a new one
-            if git log -1 --pretty=%s | grep -q "^chore: update cricket data$"; then
-              git commit --amend --no-edit
-            else
-              git commit -m "chore: update cricket data"
-            fi
-            git push --force-with-lease
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Trigger deploy workflow
-        if: steps.commit.outputs.changed == 'true'
+      - name: Update GitHub Gist
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run deploy.yml
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          POINTS=$(jq -Rs '.' public/data/pointsTable.json)
+          SCHEDULE=$(jq -Rs '.' public/data/schedule.json)
+
+          jq -n \
+            --argjson points "$POINTS" \
+            --argjson schedule "$SCHEDULE" \
+            '{ "files": { "pointsTable.json": { "content": $points }, "schedule.json": { "content": $schedule } } }' \
+          | curl -s -X PATCH \
+              -H "Authorization: token $GIST_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d @- \
+              https://api.github.com/gists/718302e78dbf7dbe320ba2b0d39eaf6a > /dev/null
+
+          echo "Gist updated successfully"
