@@ -1,134 +1,72 @@
 /**
- * Scrapes Cricbuzz website for IPL 2026 data and produces JSON files
- * matching the format of public/data/pointsTable.json and schedule.json.
- *
- * The data is extracted from the Next.js RSC payload embedded in the HTML,
- * which contains the same structured JSON the API would return.
- *
- * No API key needed.
- *
- * Usage:   node scripts/fetch-cricbuzz.js
- * Output:  public/data/pointsTable.json, public/data/schedule.json
+ * Scrapes Cricbuzz for IPL 2026 data.
+ * Refactored for readability and efficiency.
  */
 
 const https = require('https');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-const SERIES_ID = 9241;
-const SERIES_SLUG = 'indian-premier-league-2026';
-const BASE = 'https://www.cricbuzz.com';
-
-const outDir = path.join(__dirname, '..', 'public', 'data');
-fs.mkdirSync(outDir, { recursive: true });
-
-const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.9',
+const CONFIG = {
+  SERIES_ID: 9241,
+  SERIES_SLUG: 'indian-premier-league-2026',
+  BASE_URL: 'https://www.cricbuzz.com',
+  OUT_DIR: path.join(__dirname, '..', 'public', 'data'),
+  HEADERS: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  }
 };
 
-function fetchPage(url) {
+/**
+ * Modernized Fetch using Promises and redirect handling
+ */
+async function fetchPage(url) {
   return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-    https.get({
-      hostname: parsed.hostname,
-      path: parsed.pathname + parsed.search,
-      headers: HEADERS,
-    }, (res) => {
+    https.get(url, { headers: CONFIG.HEADERS }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const loc = res.headers.location.startsWith('http')
-          ? res.headers.location
-          : `https://${parsed.hostname}${res.headers.location}`;
-        return fetchPage(loc).then(resolve).catch(reject);
+        return resolve(fetchPage(new URL(res.headers.location, url).href));
       }
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve(data));
+      
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => resolve(body));
     }).on('error', reject);
   });
 }
 
-
-// ─── Extract JSON data from Next.js RSC payload in HTML ───
-
 /**
- * The Cricbuzz pages embed structured data in the Next.js RSC flight payload.
- * For the schedule page, it contains a "matchesData" object with the full
- * matchDetails array. For the points table, it contains "pointsData".
- * We extract these by searching for the known JSON keys in the HTML.
+ * Simplifies the extraction of specific JSON keys from the HTML/RSC payload.
  */
+function extractData(html, key) {
+  // Regex looks for the key followed by either { or [
+  // Accounts for escaped quotes (\") often found in RSC payloads
+  const regex = new RegExp(`\\\\?"${key}\\\\?":\\s*(\\{|\\[)`, 'g');
+  const match = regex.exec(html);
+  if (!match) return null;
 
-function extractJsonObject(html, startKey) {
-  let idx = html.indexOf(`${startKey}\\":{`);
-  let escaped = true;
-  if (idx === -1) {
-    idx = html.indexOf(`${startKey}\\":[`);
-  }
-  if (idx === -1) {
-    idx = html.indexOf(`"${startKey}":{`);
-    escaped = false;
-  }
-  if (idx === -1) {
-    idx = html.indexOf(`"${startKey}":[`);
-    escaped = false;
-  }
-  if (idx === -1) return null;
+  let startIdx = match.index + match[0].length - 1;
+  let depth = 0;
+  let inString = false;
 
-  const keyEnd = html.indexOf(escaped ? '\\":' : '":', idx);
-  if (keyEnd === -1) return null;
-  let i = keyEnd + (escaped ? 3 : 2);
+  for (let i = startIdx; i < html.length; i++) {
+    const char = html[i];
+    
+    // Handle strings to avoid counting brackets inside text
+    if (char === '"' && html[i - 1] !== '\\') inString = !inString;
+    if (inString) continue;
 
-  while (i < html.length && /\s/.test(html[i])) i++;
-
-  if (escaped) {
-    const open = html[i];
-    if (open !== '{' && open !== '[') return null;
-
-    let depth = 0;
-    let start = i;
-    for (; i < html.length; i++) {
-      const ch = html[i];
-      if (ch === '{' || ch === '[') depth++;
-      else if (ch === '}' || ch === ']') {
-        depth--;
-        if (depth === 0) {
-          let jsonStr = html.substring(start, i + 1);
-          jsonStr = jsonStr.replace(/\\"/g, '"');
-          jsonStr = jsonStr.replace(/\\\//g, '/');
-          try {
-            return JSON.parse(jsonStr);
-          } catch (e) {
-            console.warn(`  Failed to parse escaped JSON for "${startKey}": ${e.message}`);
-            return null;
-          }
-        }
-      }
-    }
-  } else {
-    const open = html[i];
-    if (open !== '{' && open !== '[') return null;
-    let depth = 0;
-    let start = i;
-    let inStr = false;
-    let esc = false;
-
-    for (; i < html.length; i++) {
-      const ch = html[i];
-      if (esc) { esc = false; continue; }
-      if (ch === '\\') { esc = true; continue; }
-      if (ch === '"') { inStr = !inStr; continue; }
-      if (inStr) continue;
-      if (ch === '{' || ch === '[') depth++;
-      if (ch === '}' || ch === ']') {
-        depth--;
-        if (depth === 0) {
-          try {
-            return JSON.parse(html.substring(start, i + 1));
-          } catch (e) {
-            console.warn(`  Failed to parse JSON for "${startKey}": ${e.message}`);
-            return null;
-          }
+    if (char === '{' || char === '[') depth++;
+    else if (char === '}' || char === ']') {
+      depth--;
+      if (depth === 0) {
+        let jsonStr = html.substring(startIdx, i + 1);
+        // Clean up escaped characters if present
+        jsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\//g, '/');
+        try {
+          return JSON.parse(jsonStr);
+        } catch (e) {
+          return null;
         }
       }
     }
@@ -136,112 +74,85 @@ function extractJsonObject(html, startKey) {
   return null;
 }
 
+/**
+ * Transformation logic for Points Table
+ */
+function transformPoints(html) {
+  const data = extractData(html, 'pointsData')?.pointsTable || extractData(html, 'pointsTable');
+  if (!data) throw new Error('Points data not found');
 
-// ─── Points Table: extract from HTML ───
-function parsePointsTable(html) {
-  let pointsTable;
-  const pointsData = extractJsonObject(html, 'pointsData');
-  if (pointsData && pointsData.pointsTable) {
-    pointsTable = pointsData.pointsTable;
-  } else {
-    const ptDirect = extractJsonObject(html, 'pointsTable');
-    if (ptDirect && Array.isArray(ptDirect)) {
-      pointsTable = ptDirect;
-    }
-  }
-  if (!pointsTable) {
-    throw new Error('Could not extract points data from page');
-  }
-  console.log('  Extracted points data from RSC payload');
   return {
-    pointsTable: pointsTable.map(group => ({
+    pointsTable: data.map(group => ({
       groupName: group.groupName,
-      pointsTableInfo: group.pointsTableInfo.map(team => {
-        const entry = {
-          teamId: team.teamId,
-          teamName: team.teamName,
-          teamFullName: team.teamFullName,
-          matchesPlayed: team.matchesPlayed,
-          matchesWon: team.matchesWon,
-          points: team.points,
-          nrr: team.nrr,
-        };
-        if (team.matchesLost) entry.matchesLost = team.matchesLost;
-        return entry;
-      })
+      pointsTableInfo: group.pointsTableInfo.map(t => ({
+        teamId: t.teamId,
+        teamName: t.teamName,
+        teamFullName: t.teamFullName,
+        matchesPlayed: t.matchesPlayed,
+        matchesWon: t.matchesWon,
+        matchesLost: t.matchesLost || 0,
+        points: t.points,
+        nrr: t.nrr,
+      }))
     }))
   };
 }
 
-// ─── Schedule: extract from HTML ───
-function parseSchedule(html) {
-  let matchDetails;
-  const matchesData = extractJsonObject(html, 'matchesData');
-  if (matchesData && matchesData.matchDetails) {
-    matchDetails = matchesData.matchDetails;
-  } else {
-    const mdDirect = extractJsonObject(html, 'matchDetails');
-    if (mdDirect && Array.isArray(mdDirect)) {
-      matchDetails = mdDirect;
-    }
-  }
-  if (!matchDetails) {
-    throw new Error('Could not extract schedule data from page');
-  }
-  console.log('  Extracted schedule data from RSC payload');
+/**
+ * Transformation logic for Schedule
+ */
+function transformSchedule(html) {
+  const data = extractData(html, 'matchesData')?.matchDetails || extractData(html, 'matchDetails');
+  if (!data) throw new Error('Schedule data not found');
+
   return {
-    matchDetails: matchDetails
+    matchDetails: data
       .filter(item => item.matchDetailsMap)
       .map(item => ({
         matchDetailsMap: {
           key: item.matchDetailsMap.key,
-          match: item.matchDetailsMap.match.map(m => {
-            const info = m.matchInfo;
-            const stripped = {
-              matchInfo: {
-                matchId: info.matchId,
-                matchDesc: info.matchDesc,
-                startDate: info.startDate,
-                state: info.state,
-                status: info.status,
-                team1: { teamId: info.team1.teamId, teamName: info.team1.teamName, teamSName: info.team1.teamSName },
-                team2: { teamId: info.team2.teamId, teamName: info.team2.teamName, teamSName: info.team2.teamSName },
-              },
-            };
-            if (m.matchScore) stripped.matchScore = m.matchScore;
-            return stripped;
-          }),
-        },
-      })),
+          match: item.matchDetailsMap.match.map(m => ({
+            matchInfo: {
+              matchId: m.matchInfo.matchId,
+              matchDesc: m.matchInfo.matchDesc,
+              startDate: m.matchInfo.startDate,
+              state: m.matchInfo.state,
+              status: m.matchInfo.status,
+              team1: { teamId: m.matchInfo.team1.teamId, teamName: m.matchInfo.team1.teamName, teamSName: m.matchInfo.team1.teamSName },
+              team2: { teamId: m.matchInfo.team2.teamId, teamName: m.matchInfo.team2.teamName, teamSName: m.matchInfo.team2.teamSName },
+            },
+            matchScore: m.matchScore || null
+          }))
+        }
+      }))
   };
 }
 
-// ─── Main ───
-(async () => {
+/**
+ * Main Orchestrator
+ */
+async function main() {
   try {
-    // 1. Points table
-    console.log('Fetching points table...');
-    const ptHtml = await fetchPage(`${BASE}/cricket-series/${SERIES_ID}/${SERIES_SLUG}/points-table`);
-    const pointsTable = parsePointsTable(ptHtml);
-    const teamCount = pointsTable.pointsTable[0]?.pointsTableInfo?.length || 0;
-    console.log(`  Found ${teamCount} teams`);
+    await fs.mkdir(CONFIG.OUT_DIR, { recursive: true });
 
-    fs.writeFileSync(path.join(outDir, 'pointsTable.json'), JSON.stringify(pointsTable, null, 2));
-    console.log(`  Saved ${path.join(outDir, 'pointsTable.json')}\n`);
+    // 1. Points Table
+    console.log('Fetching Points Table...');
+    const ptHtml = await fetchPage(`${CONFIG.BASE_URL}/cricket-series/${CONFIG.SERIES_ID}/${CONFIG.SERIES_SLUG}/points-table`);
+    const pointsJson = transformPoints(ptHtml);
+    await fs.writeFile(path.join(CONFIG.OUT_DIR, 'pointsTable.json'), JSON.stringify(pointsJson, null, 2));
+    console.log(`✓ Saved Points Table (${pointsJson.pointsTable[0]?.pointsTableInfo.length} teams)`);
 
     // 2. Schedule
-    console.log('Fetching schedule...');
-    const schHtml = await fetchPage(`${BASE}/cricket-series/${SERIES_ID}/${SERIES_SLUG}/matches`);
-    const schedule = parseSchedule(schHtml);
-    const matchCount = schedule.matchDetails.reduce((sum, d) => sum + (d.matchDetailsMap?.match?.length || 0), 0);
-    console.log(`  Found ${matchCount} matches across ${schedule.matchDetails.length} date groups`);
+    console.log('Fetching Schedule...');
+    const schHtml = await fetchPage(`${CONFIG.BASE_URL}/cricket-series/${CONFIG.SERIES_ID}/${CONFIG.SERIES_SLUG}/matches`);
+    const scheduleJson = transformSchedule(schHtml);
+    await fs.writeFile(path.join(CONFIG.OUT_DIR, 'schedule.json'), JSON.stringify(scheduleJson, null, 2));
+    console.log('✓ Saved Schedule');
 
-    fs.writeFileSync(path.join(outDir, 'schedule.json'), JSON.stringify(schedule, null, 2));
-    console.log(`  Saved ${path.join(outDir, 'schedule.json')}\n`);
-
-    console.log('Done!');
-  } catch (e) {
-    console.error('Error:', e);
+  } catch (error) {
+    console.error('Execution Failed:', error.message);
     process.exit(1);
   }
-})();
+}
+
+main();

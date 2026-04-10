@@ -22,17 +22,28 @@ body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 1rem 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -57,10 +68,15 @@ body {
   font-weight: 400;
 }
 
-.data-controls {
+.github-link {
+  color: #555;
+  transition: color 0.2s ease;
   display: flex;
-  gap: 1rem;
   align-items: center;
+}
+
+.github-link:hover {
+  color: #333;
 }
 
 .error-banner {
@@ -97,9 +113,9 @@ body {
 /* Main Content */
 .app-main {
   flex: 1;
-  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 2rem;
   width: 100%;
 }
 
@@ -167,23 +183,26 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
   .header-content {
-    flex-direction: column;
-    text-align: center;
+    padding: 1rem;
   }
-  
+
   .title-main {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
-  
+
+  .title-sub {
+    font-size: 0.8rem;
+  }
+
   .app-main {
     padding: 1rem;
   }
-  
+
   .content-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .points-section,
   .schedule-section {
     padding: 1rem;
@@ -191,16 +210,20 @@ body {
 }
 
 @media (max-width: 480px) {
-  .app-header {
-    padding: 1rem;
+  .header-content {
+    padding: 0.75rem;
   }
-  
+
   .title-main {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
-  
-  .data-controls {
-    flex-direction: column;
-    width: 100%;
+
+  .title-sub {
+    font-size: 0.75rem;
+  }
+
+  .reset-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
 }
