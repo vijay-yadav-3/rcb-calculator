@@ -32,6 +32,49 @@ const MatchSchedule = ({ matches, predictions, onPrediction }) => {
     }
   };
 
+  // Determine card style based on playoff match type
+  const getPlayoffCardStyle = (matchDesc) => {
+    if (!matchDesc) return {};
+    const desc = matchDesc.toLowerCase();
+    if (desc.includes('qualifier 1') || desc.includes('qualifier 2')) {
+      return {
+        background: '#e8f5e9',
+        border: '1px solid #4CAF50',
+      };
+    }
+    if (desc.includes('eliminator')) {
+      return {
+        background: '#ffebee',
+        border: '1px solid #e53935',
+      };
+    }
+    if (desc.includes('final')) {
+      return {
+        background: 'linear-gradient(135deg, #fff8e1, #fffde7)',
+        border: '1px solid #f9a825',
+      };
+    }
+    return {};
+  };
+
+  const getPlayoffTextColor = (matchDesc) => {
+    if (!matchDesc) return '#444';
+    const desc = matchDesc.toLowerCase();
+    if (desc.includes('qualifier 1') || desc.includes('qualifier 2')) return '#2e7d32';
+    if (desc.includes('eliminator')) return '#c62828';
+    if (desc.includes('final')) return '#e65100';
+    return '#444';
+  };
+
+  const getPlayoffDateColor = (matchDesc) => {
+    if (!matchDesc) return '#888';
+    const desc = matchDesc.toLowerCase();
+    if (desc.includes('qualifier 1') || desc.includes('qualifier 2')) return '#388e3c';
+    if (desc.includes('eliminator')) return '#d32f2f';
+    if (desc.includes('final')) return '#f57c00';
+    return '#888';
+  };
+
   const styles = {
     container: {
       display: 'flex',
@@ -140,12 +183,16 @@ const MatchSchedule = ({ matches, predictions, onPrediction }) => {
         const isTeam1Selected = currentPrediction === matchInfo.team1?.teamId;
         const isTeam2Selected = currentPrediction === matchInfo.team2?.teamId;
         
+        const playoffCardStyle = getPlayoffCardStyle(matchInfo.matchDesc);
+        const playoffTextColor = getPlayoffTextColor(matchInfo.matchDesc);
+        const playoffDateColor = getPlayoffDateColor(matchInfo.matchDesc);
+
         return (
-          <div key={matchInfo.matchId} style={styles.card}>
+          <div key={matchInfo.matchId} style={{ ...styles.card, ...playoffCardStyle }}>
             {/* Header */}
             <div style={styles.header}>
-              <span style={styles.matchDesc}>{matchInfo.matchDesc}</span>
-              <span style={styles.matchDate}>{formatDate(matchInfo.startDate)}</span>
+              <span style={{ ...styles.matchDesc, color: playoffTextColor }}>{matchInfo.matchDesc}</span>
+              <span style={{ ...styles.matchDate, color: playoffDateColor }}>{formatDate(matchInfo.startDate)}</span>
             </div>
             
             {/* Teams - Left vs Right */}
